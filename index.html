@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+
+<html>
+
+<head> 
+
+    <title>AFTER SCHOOL ACTIVITIES</title>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0px;
+            padding: 0px;
+            display: flex;
+            flex-direction: column;
+            background: #f4f6f8;
+            min-height: 100vh;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 65px;
+            color: #0c0a0a;
+            font-family: "Times New Roman", serif;
+        }
+
+        body {
+            background: #faf9f9;
+        }
+
+        #activityapp {
+            max-width: 1200px;
+            margin: 0 auto;
+            flex: 1;
+            padding:40px 20px;
+            width: 100%;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin-top: 10px;
+            background: #e62a5f;
+            color: white;
+            border: 0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition:  0.5s
+        }
+
+        button:hover {
+            background: #010305;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .sorting {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin: 25px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border: 2px solid black;
+            box-shadow: 0 6px 8px rgba(249, 7, 128, 0.133);
+        }
+
+        .sorting select {
+            padding: 8px;
+        }
+
+        .lesson-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+        }
+
+        .lesson-card {
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 8px #0002;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .lesson-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 20px 5px rgba(232, 40, 101, 0.133);
+        }
+
+        .lesson-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .add-to-cart-button {
+            width: 100%;
+        }
+
+        @media (max-width: 900px) {
+
+            .lesson-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+        }
+
+        @media (max-width: 600px) {
+
+            .lesson-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sorting {
+                flex-direction: column;
+            }
+
+        }
+
+        .cart-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f1f1f1;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px #0002;
+        }
+
+        .cart-items {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f9f9f9;
+        }
+
+        .cart-items h3 {
+            margin: 0;
+        }
+
+        .cart-items p {  
+            margin: 0;
+        } 
+
+        .site-footer {
+            text-align: center;
+            width: 100%;
+            margin-top: 40px;
+            padding: 2px 0;
+            background: #0b0809;
+            color: rgb(254, 253, 253);
+            border-radius: 8px;
+            font-size: 18px;
+            font-family: "Times New Roman", serif;
+        }
+
+        .checkout-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 30px auto;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .checkout-box button {
+            padding: 15px 40px;
+            font-size: 16px;
+        }
+
+        .checkout-box input {
+            width: 80%;
+            padding: 13px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            border: 1px solid white;
+            border-radius: 8px;
+            box-sizing: border-box;
+            border-color: #010305;
+        }
+
+        .order-message {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div id="activityapp">
+
+        <h1>{{sitename}}</h1>
+
+        <h2>Cart: {{cart.length}}</h2> <!--Display the number of items in the cart-->
+
+        <button
+            @click="showCart = !showCart"
+            :disabled="cart.length === 0 && !showCart">  <!--Prevent the button from being clicked if the cart is empty and not currently showing the cart-->
+            {{showCart ? "Back to Lessons" : "View Cart(" + cart.length + ")"}}  <!--Toggle between showing the cart and the lessons, disable the button if the cart is empty and not currently showing the cart-->
+        </button>
+
+
+    <div v-if ="!showCart">
+         <!-- Sorting -->
+        <div class="sorting">
+
+            <label for="sortAttribute">
+                Sort by:
+            </label>
+
+            <select id="sortAttribute" v-model="sortAttribute">
+
+                <option value="subject">Subject</option>
+
+                <option value="location">Location</option>
+
+                <option value="price">Price</option>
+
+                <option value="spaces">Spaces Available</option>
+
+            </select>
+
+            <label for="sortOrder">
+                Order:
+            </label>
+
+            <select id="sortOrder" v-model="sortOrder">
+
+                <option value="asc">Ascending</option>
+
+                <option value="desc">Descending</option>
+
+            </select>
+
+        </div>
+
+        <div class="lesson-grid">
+
+            <div
+                class="lesson-card"
+                v-for="lesson in sortedLessons"
+                :key="lesson._id">
+
+                <h2>{{lesson.subject}}</h2> <!--Display the subject of the lesson-->
+
+                <img
+                    class="lesson-image"
+                    :src="baseUrl + '/images/' + lesson.image"
+                    :alt="lesson.subject"
+                    v-if="lesson.image">
+
+                <p>Location: {{lesson.location}}</p> <!--Display the location of the lesson-->
+
+                <p>Price: ${{lesson.price}}</p> <!--Display the price of the lesson-->
+
+                <p>Spaces Available: {{lesson.spaces}}</p> <!--Display the number of spaces available for the lesson-->
+
+                <!-- Disable the button if there are no spaces available for the lesson -->
+
+                <button
+                    class="add-to-cart-button"
+                    @click="addToCart(lesson)"
+                    :disabled="lesson.spaces === 0">
+                    Add to Cart
+                </button>
+            </div>
+    </div>
+</div>
+
+
+    <div v-else class = "cart-view">
+        <h2>Your Shopping Cart</h2>
+        <p v-if="cart.length === 0">Your cart is empty.</p>
+
+        <div class ="cart-items" v-for="(item, index) in cart" :key="index">
+            <h3>{{ item.subject }}</h3>
+            <p>Location: {{ item.location }}</p>
+            <p>Price: ${{ item.price }}</p>
+            <button @click="removeFromCart(index)">Remove</button>
+        </div>
+
+        <h3 v-if="cart.length > 0">Total: ${{ totalPrice }}</h3> <!-- Display the total price only if there are items in the cart -->
+
+        <div class="checkout-box">
+            <h3>Checkout</h3>
+            <input v-model="name" placeholder="Name(letters only)">
+            <input v-model="phone" placeholder="Phone(numbers only)">
+            <p v-if="name && !validName" style="color:red">Name must contain letters only!</p>
+            <p v-if="phone && !validPhone" style="color:red">Phone must contain numbers only!</p> 
+            <button @click="proceedToCheckout" :disabled="!canCheckout">Checkout</button> <!-- Always visible, enabled only when name and phone are valid -->
+            <p v-if="orderMessage">{{orderMessage}}</p>
+        </div>
+    
+    </div>
+</div>
+
+    <footer class="site-footer">
+        <p>&copy; 2027 Midgen University Dubai. All rights reserved.</p>
+    </footer>
+
+    <script>
+
+        const app = Vue.createApp({
+
+            data() {
+
+                return {
+
+                    sitename: "AFTER SCHOOL ACTIVITIES",
+
+                    baseUrl: "https://m00991041-after-school.onrender.com",
+
+                    cart: [],
+
+                    showCart: false,
+
+                    sortAttribute: 'subject', 
+
+                    sortOrder: 'asc', 
+
+                    name: "",
+                    phone: "",
+                    orderMessage: "",
+
+                    lessons: [],
+
+                }
+
+            },
+
+            computed: {
+
+                validName() {return /^[A-Za-z\s]+$/.test(this.name);},
+                validPhone() {return /^[0-9]+$/.test(this.phone);},
+                canCheckout() {return this.validName && this.validPhone && this.cart.length > 0;},
+
+                sortedLessons() {
+
+                    let sorted = [...this.lessons]; // Create a copy of the lessons array to sort 
+
+                    sorted.sort((a, b) => { // Sort the lessons based on the selected attribute and order 
+
+                        let valueA = a[this.sortAttribute]; // Get the value of the selected attribute for lesson a 
+
+                        let valueB = b[this.sortAttribute]; // Get the value of the selected attribute for lesson b 
+
+                        if (typeof valueA === "string") { //If the values are strings, convert them to lowercase for case-insensitive comparison 
+
+                            valueA = valueA.toLowerCase(); // Convert valueA to lowercase 
+
+                            valueB = valueB.toLowerCase(); // Convert valueB to lowercase 
+
+                        }
+
+                        if (valueA < valueB) { // If valueA is less than valueB, return -1 for ascending order or 1 for descending order 
+
+                            return this.sortOrder === "asc" ? -1 : 1; // Return -1 for ascending order, 1 for descending order 
+
+                        }
+
+                        if (valueA > valueB) { // If valueA is greater than valueB, return 1 for ascending order or -1 for descending order 
+
+                            return this.sortOrder === "asc" ? 1 : -1; // Return 1 for ascending order, -1 for descending order 
+
+                        }
+
+                        return 0;
+
+                    });
+
+                    return sorted;
+
+                },
+
+                totalPrice() { // Compute the total price of the items in the cart 
+
+                    return this.cart.reduce((total, lesson) => total + lesson.price, 0); // Use reduce to sum up the prices of all lessons in the cart 
+                }
+            },
+
+
+            methods: {
+                addToCart(lesson) {
+                    if (lesson.spaces > 0) { // Check if there are spaces available for the lesson 
+                        this.cart.push(lesson);
+                        // Decrease the number of spaces available for the lesson 
+                        lesson.spaces--;
+                    }
+                },
+                
+                removeFromCart(index) {
+                    const lesson = this.cart[index]; // Get the lesson being removed from the cart 
+                    lesson.spaces++; // Increase the number of spaces available for the lesson when removed from the cart 
+                    this.cart.splice(index, 1); // Remove the lesson from the cart 
+                },
+
+                async proceedToCheckout() {
+                    try{
+                        //counts each lesson in the cart
+                        const counts = {};
+                        for (const lesson of this.cart) { //goes through every lesson in the cart
+                            const id = lesson._id;
+
+                            if (!counts[id]) {
+                                counts[id] = 0;
+                            }
+
+                            counts[id]++;
+                        }
+                        const items = Object.entries(counts).map(([lessonId, spaces]) => ({ lessonId, spaces}));
+
+                        const order = {
+                            name: this.name,
+                            phone:this.phone,
+                            items: items
+                        };
+
+                        await this. postOrder(order);
+
+                        for (const {lessonId, spaces} of items) {
+                            const lesson = this.lessons.find(lesson => lesson._id === lessonId);
+                            if (lesson) {
+                                await this.updateLessonSpaces(lessonId, lesson.spaces); // Update the spaces available for each lesson in the database
+                            }
+                        }
+                        this.orderMessage = "Order Submitted! Thank You, " + this.name + ".";
+                        this.cart = [];
+                        this.name = "";
+                        this.phone = "";
+                    } catch (error) {
+                        this.orderMessage = "Sorry, your order could not be placed.";
+                        console.log(error);
+                    }
+                    
+                },
+
+                async fetchData()
+                    {
+                        try{
+                            const response = await fetch(`${this.baseUrl}/lessons`); //await returns a promise based on the outcome
+                            if (!response.ok){
+                                throw new Error(`HTTP error ! status: ${response.status}`);
+                            }
+
+                            this.lessons  = await response.json()
+                        }catch(error) {
+                            console.log("Failed to fetch lessons data", error);
+                        }
+                            
+                    },       
+
+                async postOrder(order) {
+                    const response = await fetch(`${this.baseUrl}/orders`, {
+                        method: "POST",
+                        headers: {"Content-Type": "application/json"},
+                        body: JSON.stringify(order)
+                    });
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    return await response.json();
+                },
+
+                async updateLessonSpaces(lessonId, spaces) {
+                    const response = await fetch(`${this.baseUrl}/lessons/${lessonId}`, {
+                        method: "PUT",
+                        headers: {"Content-Type": "application/json"},
+                        body: JSON.stringify({spaces: spaces})
+                    });
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    return await response.json(); 
+                },
+            },
+
+            mounted() {
+                this.fetchData();
+            }
+        })
+        
+
+        app.mount('#activityapp');
+
+    </script>
+
+</body>
+
+</html>
