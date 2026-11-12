@@ -194,6 +194,14 @@
             margin-top: 20px;
         }
 
+        .sorting input {
+            padding: 8px;
+            flex: 1;
+            width: 200px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
     </style>
 
 </head>
@@ -216,6 +224,14 @@
     <div v-if ="!showCart">
          <!-- Sorting -->
         <div class="sorting">
+            <label for="searchQuery">
+                Search:</label>
+            <input
+                id="searchQuery"
+                v-model="searchQuery"
+                @input="searchLessons"
+                placeholder="Search by subject, location, price, or spaces"
+            >
 
             <label for="sortAttribute">
                 Sort by:
@@ -331,6 +347,8 @@
 
                     sortOrder: 'asc', 
 
+                    searchQuery: '',
+
                     name: "",
                     phone: "",
                     orderMessage: "",
@@ -430,8 +448,8 @@
 
                         await this. postOrder(order);
 
-                        for (const {lessonId, spaces} of items) {
-                            const lesson = this.lessons.find(lesson => lesson._id === lessonId);
+                        for (const {lessonId} of items) {
+                            const lesson = this.cart.find(cartItem => cartItem._id === lessonId);
                             if (lesson) {
                                 await this.updateLessonSpaces(lessonId, lesson.spaces); // Update the spaces available for each lesson in the database
                             }
@@ -460,7 +478,22 @@
                             console.log("Failed to fetch lessons data", error);
                         }
                             
-                    },       
+                    },    
+                    
+                    //search lessons based on the search query
+                async searchLessons() {
+                        try {
+                            // Fetch lessons based on the search query
+                            const response = await fetch(`${this.baseUrl}/search?q=${encodeURIComponent(this.searchQuery)}`);
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            const fetched = await response.json();
+                            this.lessons = fetched.map(lesson => this.cart.find(cartItem => cartItem._id === lesson._id) || lesson); // Update the lessons array with the fetched lessons, preserving the spaces for lessons already in the cart
+                        } catch (error) {
+                            console.log("Failed to search lessons", error);
+                        }
+                    },
 
                 async postOrder(order) {
                     const response = await fetch(`${this.baseUrl}/orders`, {
