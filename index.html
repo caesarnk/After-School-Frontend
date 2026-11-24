@@ -314,6 +314,7 @@
         <div class ="cart-items" v-for="(item, index) in cart" :key="index">
             <h3>{{ item.subject }}</h3>
             <p>Location: {{ item.location }}</p>
+            <p>Teacher: {{ teacherFor(item) }}</p>
             <p>Price: ${{ item.price }}</p>
             <button @click="removeFromCart(index)">Remove</button>
         </div>
@@ -549,12 +550,13 @@
 
                     try {
                         this.searchQuery = '';
-                        const response = await fetch(`${this.baseUrl}/teachers/${this.selectedTeacher}`);
+                        const response = await fetch(`${this.baseUrl}/teachers/${this.selectedTeacher}/lessons`);
                         if (!response.ok) {
                             throw new Error(`HTTP error! status: ${response.status}`);
                         }
                         const fetched = await response.json();
-                        this.lessons = fetched;
+                        // Update the lessons array with the fetched lessons, preserving the spaces for lessons already in the cart
+                        this.lessons = fetched.map(lesson => this.cart.find(cartItem => cartItem._id === lesson._id) || lesson); 
                     } catch (error) {
                         console.log("Failed to filter lessons by teacher", error);
                     }
