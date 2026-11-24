@@ -235,9 +235,11 @@
 
             <label for="teacherSelect">
                 Teacher:</label>
-            <select id="teacherSelect" v-model="selectedTeacher" @change="searchLessons">
+            <select id="teacherSelect" v-model="selectedTeacher" @change="filterByTeacher">
                 <option value="">All Teachers</option>
-                <option v-for="teacher in teachers" :value="teacher._id">{{ teacher.name }}</option>
+                <option v-for="teacher in teachers" :key="teacher._id" :value="teacher._id">
+                    {{ teacher.firstName }} {{ teacher.lastName }}    
+                </option>
             </select>
 
             <label for="sortAttribute">
@@ -291,6 +293,7 @@
 
                 <p>Spaces Available: {{lesson.spaces}}</p> <!--Display the number of spaces available for the lesson-->
 
+                <p>Teacher: {{teacherFor(lesson)}}</p>
                 <!-- Disable the button if there are no spaces available for the lesson -->
 
                 <button
@@ -546,7 +549,7 @@
 
                     try {
                         this.searchQuery = '';
-                        const response = await fetch(`${this.baseUrl}/teachers/$(this.selectedTeacher)}`);
+                        const response = await fetch(`${this.baseUrl}/teachers/${this.selectedTeacher}`);
                         if (!response.ok) {
                             throw new Error(`HTTP error! status: ${response.status}`);
                         }
@@ -555,8 +558,13 @@
                     } catch (error) {
                         console.log("Failed to filter lessons by teacher", error);
                     }
+                },
+
+                teacherFor(lesson) {
+                    const names = this.teachers.filter(teacher => (teacher.lessonIds || []).includes(lesson._id)).map(teacher => teacher.firstName + " " + teacher.lastName);
+                    return names.length ? names.join(", "): "To be confirmed";
                 }
-            },
+            },   
 
             mounted() {
                 this.fetchData();
