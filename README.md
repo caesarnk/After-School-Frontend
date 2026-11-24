@@ -8,6 +8,9 @@
 - GitHub Repository: https://github.com/caesarnk/After-School-Backend
 - Render route (all lessons): https://m00991041-after-school.onrender.com/lessons
 
+## Render Server
+-Render server lessons route: https://m00991041-after-school.onrender.com/lessons
+
 ## Features
 - Lessons loaded from the back end with fetch
 - Search by subject, location, price or spaces
