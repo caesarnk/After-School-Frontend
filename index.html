@@ -233,6 +233,13 @@
                 placeholder="Search by subject, location, price, or spaces"
             >
 
+            <label for="teacherSelect">
+                Teacher:</label>
+            <select id="teacherSelect" v-model="selectedTeacher" @change="searchLessons">
+                <option value="">All Teachers</option>
+                <option v-for="teacher in teachers" :value="teacher._id">{{ teacher.name }}</option>
+            </select>
+
             <label for="sortAttribute">
                 Sort by:
             </label>
@@ -354,6 +361,9 @@
                     orderMessage: "",
 
                     lessons: [],
+
+                    teachers: [],
+                    selectedTeacher: '',
 
                 }
 
@@ -482,6 +492,7 @@
                     
                     //search lessons based on the search query
                 async searchLessons() {
+                    this.selectedTeacher = ''; // Clear the selected teacher when searching
                         try {
                             // Fetch lessons based on the search query
                             const response = await fetch(`${this.baseUrl}/search?q=${encodeURIComponent(this.searchQuery)}`);
@@ -514,10 +525,42 @@
                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                     return await response.json(); 
                 },
+
+                async fetchTeachers() {
+                    try {
+                        const response = await fetch(`${this.baseUrl}/teachers`);
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        this.teachers = await response.json();
+                    } catch (error) {
+                        console.log("Failed to fetch teachers data", error);
+                    }
+                },
+
+                async filterByTeacher() {
+                    if (this.selectedTeacher ==='') {
+                        this.searchQuery = '';
+                        return this.fetchData();
+                    }
+
+                    try {
+                        this.searchQuery = '';
+                        const response = await fetch(`${this.baseUrl}/teachers/$(this.selectedTeacher)}`);
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        const fetched = await response.json();
+                        this.lessons = fetched;
+                    } catch (error) {
+                        console.log("Failed to filter lessons by teacher", error);
+                    }
+                }
             },
 
             mounted() {
                 this.fetchData();
+                this.fetchTeachers();
             }
         })
         
