@@ -487,7 +487,8 @@
                                 throw new Error(`HTTP error ! status: ${response.status}`);
                             }
 
-                            this.lessons  = await response.json()
+                            const fetched = await response.json();
+                            this.lessons = fetched.map(lesson => this.cart.find(cartItem => cartItem._id === lesson._id) || lesson); // Update the lessons array with the fetched lessons, preserving the spaces for lessons already in the cart
                         }catch(error) {
                             console.log("Failed to fetch lessons data", error);
                         }
